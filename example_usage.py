@@ -1,10 +1,13 @@
-# example_usage.py
-from messaging_broker import MessageBroker, MessageConsumer
-
+# example_usage.py (How to use the system)
 def main():
+    # Replace with your RabbitMQ VM's IP
+    rabbitmq_host = '192.168.x.x'  
+    
     # Initialize broker
-    broker = MessageBroker(host='localhost')
-    broker.connect()
+    broker = MessageBroker(host=rabbitmq_host)
+    if not broker.connect():
+        print("Failed to connect to RabbitMQ")
+        return
     
     # Set up queues
     queues = ['task_queue', 'response_queue']
@@ -17,12 +20,18 @@ def main():
         "timestamp": datetime.now().isoformat()
     }
     
-    correlation_id = broker.publish_message('task_queue', message)
-    print(f"Sent message with ID: {correlation_id}")
-    
-    # Example: Set up a consumer
-    consumer = MessageConsumer(broker, 'task_queue')
-    consumer.start_consuming()
+    try:
+        correlation_id = broker.publish_message('task_queue', message)
+        print(f"Sent message with ID: {correlation_id}")
+        
+        # Set up backend handler
+        backend = BackendHandler(broker)
+        print("Waiting for messages. Press CTRL+C to exit.")
+        broker.consume_messages('task_queue', backend.process_message)
+        
+    except KeyboardInterrupt:
+        print("Shutting down...")
+        broker.close()
 
 if __name__ == "__main__":
     main()
