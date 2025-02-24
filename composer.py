@@ -21,7 +21,6 @@ logging.basicConfig(
 logger = logging.getLogger('composer')
 
 def setup_rabbitmq_connection():
-    """Establish connection to RabbitMQ server"""
     try:
         # Use SSL parameters for CloudAMQP
         ssl_options = {
@@ -49,7 +48,6 @@ def setup_rabbitmq_connection():
         sys.exit(1)
 
 def send_start_command(service_name):
-    """Send command to start a specific service"""
     try:
         connection = setup_rabbitmq_connection()
         channel = connection.channel()
@@ -88,7 +86,6 @@ def send_start_command(service_name):
         return False
 
 def start_all_services():
-    """Start all services in the system"""
     services = ['frontend', 'backend', 'database', 'messaging']
     results = {}
     
@@ -103,7 +100,6 @@ def start_all_services():
     return results
 
 def main():
-    """Main entry point for the composer script"""
     parser = argparse.ArgumentParser(description='Service Composer for distributed system')
     parser.add_argument('--service', help='Service to start (frontend, backend, database, messaging, or all)')
     args = parser.parse_args()
