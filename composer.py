@@ -21,12 +21,8 @@ logging.basicConfig(
 logger = logging.getLogger('composer')
 
 def setup_rabbitmq_connection():
+    """Establish connection to RabbitMQ server"""
     try:
-        # Use SSL parameters for CloudAMQP
-        ssl_options = {
-            'verify_peer': True,
-        }
-        
         # Create connection parameters
         credentials = pika.PlainCredentials(
             RABBITMQ_CONFIG['username'],
@@ -37,8 +33,7 @@ def setup_rabbitmq_connection():
             host=RABBITMQ_CONFIG['host'],
             port=RABBITMQ_CONFIG['port'],
             virtual_host=RABBITMQ_CONFIG['vhost'],
-            credentials=credentials,
-            ssl_options=ssl_options if RABBITMQ_CONFIG['use_ssl'] else None
+            credentials=credentials
         )
         
         connection = pika.BlockingConnection(parameters)
@@ -48,6 +43,7 @@ def setup_rabbitmq_connection():
         sys.exit(1)
 
 def send_start_command(service_name):
+    """Send command to start a specific service"""
     try:
         connection = setup_rabbitmq_connection()
         channel = connection.channel()
@@ -86,6 +82,7 @@ def send_start_command(service_name):
         return False
 
 def start_all_services():
+    """Start all services in the system"""
     services = ['frontend', 'backend', 'database', 'messaging']
     results = {}
     
@@ -93,13 +90,14 @@ def start_all_services():
         result = send_start_command(service)
         results[service] = result
         if result:
-            print(f"Sent start command to {service} service")
+            print(f" Sent start command to {service} service")
         else:
             print(f"Failed to send start command to {service} service")
     
     return results
 
 def main():
+    """Main entry point for the composer script"""
     parser = argparse.ArgumentParser(description='Service Composer for distributed system')
     parser.add_argument('--service', help='Service to start (frontend, backend, database, messaging, or all)')
     args = parser.parse_args()
@@ -115,7 +113,7 @@ def main():
         if result:
             print(f"Sent start command to {args.service} service")
         else:
-            print(f"Failed to send start command to {args.service} service")
+            print(f" Failed to send start command to {args.service} service")
     else:
         print(f"Unknown service: {args.service}")
         print("Available services: frontend, backend, database, messaging, all")
