@@ -29,12 +29,8 @@ service_statuses = {
 }
 
 def setup_rabbitmq_connection():
+    """Establish connection to RabbitMQ server"""
     try:
-        # Use SSL parameters for CloudAMQP
-        ssl_options = {
-            'verify_peer': True,
-        }
-        
         # Create connection parameters
         credentials = pika.PlainCredentials(
             RABBITMQ_CONFIG['username'],
@@ -45,8 +41,7 @@ def setup_rabbitmq_connection():
             host=RABBITMQ_CONFIG['host'],
             port=RABBITMQ_CONFIG['port'],
             virtual_host=RABBITMQ_CONFIG['vhost'],
-            credentials=credentials,
-            ssl_options=ssl_options if RABBITMQ_CONFIG['use_ssl'] else None
+            credentials=credentials
         )
         
         connection = pika.BlockingConnection(parameters)
@@ -75,12 +70,12 @@ def handle_status_message(ch, method, properties, body):
             
             # Print a nice status message
             status_emoji = {
-                'ready': '🟡',
-                'running': '🟢',
-                'stopped': '⚪',
-                'error': '🔴',
-                'unknown': '❓'
-            }.get(status, '❓')
+                'ready': 'yellow',
+                'running': 'green',
+                'stopped': 'white',
+                'error': 'red',
+                'unknown': '?'
+            }.get(status, '?')
             
             # Format timestamp
             time_str = datetime.fromtimestamp(timestamp).strftime('%H:%M:%S')
