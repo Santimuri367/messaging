@@ -22,12 +22,10 @@ logger = logging.getLogger('test_service_control')
 def setup_rabbitmq_connection():
     """Establish connection to RabbitMQ server"""
     try:
-        # Use SSL parameters for CloudAMQP
         ssl_options = {
             'verify_peer': True,
         }
         
-        # Create connection parameters
         credentials = pika.PlainCredentials(
             RABBITMQ_CONFIG['username'],
             RABBITMQ_CONFIG['password']
@@ -49,19 +47,17 @@ def setup_rabbitmq_connection():
         return None
 
 def test_connection():
-    """Test if we can connect to RabbitMQ"""
-    print("Testing RabbitMQ connection...")
+    print("Testing RabbitMQ connection")
     connection = setup_rabbitmq_connection()
     if connection:
-        print("✅ Successfully connected to RabbitMQ")
+        print("Successfully connected to RabbitMQ")
         connection.close()
         return True
     else:
-        print("❌ Failed to connect to RabbitMQ")
+        print("Failed to connect to RabbitMQ")
         return False
 
 def test_exchanges():
-    """Test if we can create exchanges in RabbitMQ"""
     print("Testing RabbitMQ exchanges...")
     connection = setup_rabbitmq_connection()
     if not connection:
@@ -83,7 +79,7 @@ def test_exchanges():
             durable=True
         )
         
-        print("✅ Successfully created test exchanges")
+        print("Successfully created test exchanges")
         
         # Clean up test exchanges
         channel.exchange_delete(exchange='service_control_test')
@@ -93,13 +89,12 @@ def test_exchanges():
         return True
     except Exception as e:
         logger.error(f"Failed to test exchanges: {e}")
-        print(f"❌ Failed to create test exchanges: {e}")
+        print(f"Failed to create test exchanges: {e}")
         if connection:
             connection.close()
         return False
 
 def test_send_message():
-    """Test if we can send a message to RabbitMQ"""
     print("Testing sending a message...")
     connection = setup_rabbitmq_connection()
     if not connection:
@@ -129,23 +124,22 @@ def test_send_message():
             routing_key='service.test.control',
             body=json.dumps(message),
             properties=pika.BasicProperties(
-                delivery_mode=2,  # make message persistent
+                delivery_mode=2,  
                 content_type='application/json'
             )
         )
         
-        print("✅ Successfully sent test message")
+        print("Successfully sent test message")
         connection.close()
         return True
     except Exception as e:
         logger.error(f"Failed to send test message: {e}")
-        print(f"❌ Failed to send test message: {e}")
+        print(f"Failed to send test message: {e}")
         if connection:
             connection.close()
         return False
 
 def test_ping_service(service_name):
-    """Test sending a ping to a specific service"""
     print(f"Testing ping to {service_name} service...")
     connection = setup_rabbitmq_connection()
     if not connection:
@@ -180,12 +174,12 @@ def test_ping_service(service_name):
             )
         )
         
-        print(f"✅ Successfully sent ping to {service_name} service")
+        print(f"Successfully sent ping to {service_name} service")
         connection.close()
         return True
     except Exception as e:
         logger.error(f"Failed to ping {service_name}: {e}")
-        print(f"❌ Failed to ping {service_name}: {e}")
+        print(f"Failed to ping {service_name}: {e}")
         if connection:
             connection.close()
         return False
@@ -193,21 +187,20 @@ def test_ping_service(service_name):
 def main():
     """Main entry point for the test script"""
     print("Service Control System Test")
-    print("==========================")
     
     # Test connection
     if not test_connection():
-        print("❌ Connection test failed. Please check your RabbitMQ settings.")
+        print("Connection test failed.")
         return
     
     # Test exchanges
     if not test_exchanges():
-        print("❌ Exchange test failed. Please check your RabbitMQ permissions.")
+        print("Exchange test failed.")
         return
     
     # Test sending a message
     if not test_send_message():
-        print("❌ Message test failed. Please check your RabbitMQ settings.")
+        print("Message test failed.")
         return
     
     # Test pinging each service
@@ -216,10 +209,6 @@ def main():
         test_ping_service(service)
     
     print("\nAll tests completed!")
-    print("In order to see if services respond to your commands:")
-    print("1. Make sure service_listener.py is running on each team member's machine")
-    print("2. Run status_monitor.py to see status updates")
-    print("3. Use composer.py to start services")
 
 if __name__ == "__main__":
     main()
