@@ -10,8 +10,7 @@ RABBITMQ_CONFIG = {
     'port': 5672,
     'vhost': 'cxknnjta',
     'username': 'cxknnjta',
-    'password': 'e2T8R0v6YhAwsvHC6dpOQAVO4qq92tTB',
-    'use_ssl': True  # CloudAMQP requires SSL/TLS
+    'password': 'e2T8R0v6YhAwsvHC6dpOQAVO4qq92tTB'
 }
 
 # Service Configuration
