@@ -29,7 +29,6 @@ service_statuses = {
 }
 
 def setup_rabbitmq_connection():
-    """Establish connection to RabbitMQ server"""
     try:
         # Use SSL parameters for CloudAMQP
         ssl_options = {
