@@ -25,7 +25,6 @@ logger = logging.getLogger('service_listener')
 running_services = {}
 
 def setup_rabbitmq_connection():
-    """Establish connection to RabbitMQ server"""
     try:
         # Use SSL parameters for CloudAMQP
         ssl_options = {
@@ -128,7 +127,7 @@ def start_service(service_name):
     running_services[service_name] = service_thread
     
     # Return success
-    print(f"✅ Service {service_name} has been started successfully!")
+    print(f"Service {service_name} has been started successfully!")
     return True
 
 def stop_service(service_name):
