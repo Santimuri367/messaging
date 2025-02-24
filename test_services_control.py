@@ -22,10 +22,7 @@ logger = logging.getLogger('test_service_control')
 def setup_rabbitmq_connection():
     """Establish connection to RabbitMQ server"""
     try:
-        ssl_options = {
-            'verify_peer': True,
-        }
-        
+        # Create connection parameters
         credentials = pika.PlainCredentials(
             RABBITMQ_CONFIG['username'],
             RABBITMQ_CONFIG['password']
@@ -35,8 +32,7 @@ def setup_rabbitmq_connection():
             host=RABBITMQ_CONFIG['host'],
             port=RABBITMQ_CONFIG['port'],
             virtual_host=RABBITMQ_CONFIG['vhost'],
-            credentials=credentials,
-            ssl_options=ssl_options if RABBITMQ_CONFIG['use_ssl'] else None
+            credentials=credentials
         )
         
         connection = pika.BlockingConnection(parameters)
@@ -47,7 +43,8 @@ def setup_rabbitmq_connection():
         return None
 
 def test_connection():
-    print("Testing RabbitMQ connection")
+    """Test if we can connect to RabbitMQ"""
+    print("Testing RabbitMQ connection...")
     connection = setup_rabbitmq_connection()
     if connection:
         print("Successfully connected to RabbitMQ")
@@ -58,6 +55,7 @@ def test_connection():
         return False
 
 def test_exchanges():
+    """Test if we can create exchanges in RabbitMQ"""
     print("Testing RabbitMQ exchanges...")
     connection = setup_rabbitmq_connection()
     if not connection:
@@ -95,6 +93,7 @@ def test_exchanges():
         return False
 
 def test_send_message():
+    """Test if we can send a message to RabbitMQ"""
     print("Testing sending a message...")
     connection = setup_rabbitmq_connection()
     if not connection:
@@ -124,7 +123,7 @@ def test_send_message():
             routing_key='service.test.control',
             body=json.dumps(message),
             properties=pika.BasicProperties(
-                delivery_mode=2,  
+                delivery_mode=2,  # make message persistent
                 content_type='application/json'
             )
         )
@@ -140,6 +139,7 @@ def test_send_message():
         return False
 
 def test_ping_service(service_name):
+    """Test sending a ping to a specific service"""
     print(f"Testing ping to {service_name} service...")
     connection = setup_rabbitmq_connection()
     if not connection:
@@ -187,20 +187,21 @@ def test_ping_service(service_name):
 def main():
     """Main entry point for the test script"""
     print("Service Control System Test")
+    print("==========================")
     
     # Test connection
     if not test_connection():
-        print("Connection test failed.")
+        print("Connection test failed. Please check your RabbitMQ settings.")
         return
     
     # Test exchanges
     if not test_exchanges():
-        print("Exchange test failed.")
+        print("Exchange test failed. Please check your RabbitMQ permissions.")
         return
     
     # Test sending a message
     if not test_send_message():
-        print("Message test failed.")
+        print("Message test failed. Please check your RabbitMQ settings.")
         return
     
     # Test pinging each service
@@ -209,6 +210,10 @@ def main():
         test_ping_service(service)
     
     print("\nAll tests completed!")
+    print("In order to see if services respond to your commands:")
+    print("1. Make sure service_listener.py is running on each team member's machine")
+    print("2. Run status_monitor.py to see status updates")
+    print("3. Use composer.py to start services")
 
 if __name__ == "__main__":
     main()
