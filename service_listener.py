@@ -25,12 +25,8 @@ logger = logging.getLogger('service_listener')
 running_services = {}
 
 def setup_rabbitmq_connection():
+    """Establish connection to RabbitMQ server"""
     try:
-        # Use SSL parameters for CloudAMQP
-        ssl_options = {
-            'verify_peer': True,
-        }
-        
         # Create connection parameters
         credentials = pika.PlainCredentials(
             RABBITMQ_CONFIG['username'],
@@ -41,8 +37,7 @@ def setup_rabbitmq_connection():
             host=RABBITMQ_CONFIG['host'],
             port=RABBITMQ_CONFIG['port'],
             virtual_host=RABBITMQ_CONFIG['vhost'],
-            credentials=credentials,
-            ssl_options=ssl_options if RABBITMQ_CONFIG['use_ssl'] else None
+            credentials=credentials
         )
         
         connection = pika.BlockingConnection(parameters)
@@ -127,7 +122,7 @@ def start_service(service_name):
     running_services[service_name] = service_thread
     
     # Return success
-    print(f"Service {service_name} has been started successfully!")
+    print(f" Service {service_name} has been started successfully!")
     return True
 
 def stop_service(service_name):
@@ -209,7 +204,7 @@ def start_listener(service_name):
     )
     
     logger.info(f"Started listening for control messages for {service_name}")
-    print(f"🎧 Listening for control commands for {service_name} service...")
+    print(f" Listening for control commands for {service_name} service...")
     
     # Send initial status update
     send_status_update(service_name, 'ready')
@@ -247,4 +242,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
