@@ -4,23 +4,33 @@ import json
 import uuid
 from datetime import datetime
 import logging
+import ssl
 
 class MessageBroker:
     def __init__(self):
-        """Initialize the message broker with CloudAMQP credentials."""
-        # CloudAMQP connection details
+        """Initialize the message broker with AWS Amazon MQ credentials."""
+        # AWS Amazon MQ connection details
         self.credentials = pika.PlainCredentials(
-            username='cxknnjta',
-            password='e2T8R0v6YhAwsvHC6dpOQAVO4qq92tTB'
+            username='projectIT',
+            password='group4it490section'
         )
+        
+        # SSL context for secure connection
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        ssl_context.set_ciphers('ECDHE+AESGCM:!ECDSA')
+        
         self.parameters = pika.ConnectionParameters(
-            host='shark-01.rmq.cloudamqp.com',
-            port=5672,
-            virtual_host='cxknnjta',
-            credentials=self.credentials
+            host='b-72533e82-e173-469e-9ef2-432f4fd29309.mq.us-east-2.amazonaws.com',
+            port=5671,
+            virtual_host='/',
+            credentials=self.credentials,
+            ssl_options=pika.SSLOptions(ssl_context),
+            connection_attempts=3,
+            retry_delay=5
         )
+        
         # Alternative connection using URL
-        self.url = "amqps://cxknnjta:e2T8R0v6YhAwsvHC6dpOQAVO4qq92tTB@shark.rmq.cloudamqp.com/cxknnjta"
+        self.url = "amqps://projectIT:group4it490section@b-72533e82-e173-469e-9ef2-432f4fd29309.mq.us-east-2.amazonaws.com:5671/"
         
         self.connection = None
         self.channel = None
@@ -35,15 +45,15 @@ class MessageBroker:
         self.logger = logging.getLogger(__name__)
 
     def connect(self):
-        """Establish connection to CloudAMQP."""
+        """Establish connection to AWS Amazon MQ."""
         try:
             # You can use either URL or parameters to connect
             # self.connection = pika.BlockingConnection(pika.URLParameters(self.url))
             self.connection = pika.BlockingConnection(self.parameters)
             self.channel = self.connection.channel()
-            self.logger.info("Connected to CloudAMQP successfully")
+            self.logger.info("Connected to AWS Amazon MQ successfully")
         except Exception as e:
-            self.logger.error(f"Failed to connect to CloudAMQP: {str(e)}")
+            self.logger.error(f"Failed to connect to AWS Amazon MQ: {str(e)}")
             raise
 
     def setup_queue(self, queue_name):
