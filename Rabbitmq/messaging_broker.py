@@ -41,15 +41,16 @@ class MessageBroker:
             username='guest',
             password='guest'
         )
-        self.parameters = pika.ConnectionParameters(
-            host='10.147.20.12',  # IP from your files
-            port=5672,
-            virtual_host='/',
-            credentials=self.credentials,
-            heartbeat=600,
-            connection_attempts=3,
-            retry_delay=5
-        )
+
+self.parameters = pika.ConnectionParameters(
+    host='localhost',  # Use 'localhost' or your actual RabbitMQ server IP
+    port=5672,
+    virtual_host='/',
+    credentials=self.credentials,
+    heartbeat=600,
+    connection_attempts=3,
+    retry_delay=5
+)
         
         self.connection = None
         self.channel = None
