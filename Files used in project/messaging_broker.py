@@ -2,8 +2,72 @@
 import pika
 import json
 import uuid
+import os
 from datetime import datetime
 import logging
+
+# Ensure logs directory exists
+log_dir = os.path.expanduser("~/logs")
+os.makedirs(log_dir, exist_ok=True)
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(os.path.join(log_dir, "messaging_broker.log")),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger('messaging_broker')
+
+def setup_rabbitmq_queues():
+    """
+    Set up the initial RabbitMQ queues and exchanges
+    """
+    # Setup logging for this function
+    setup_logger = logging.getLogger("rabbitmq_setup")
+    
+    try:
+        # Connect to RabbitMQ
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host='localhost', port=5672)
+        )
+        channel = connection.channel()
+        
+        # Declare queues
+        channel.queue_declare(queue='frontend_queue')
+        channel.queue_declare(queue='backend_queue')
+        channel.queue_declare(queue='database_queue')
+        
+        # Optionally set up exchanges if you need them
+        channel.exchange_declare(exchange='services_exchange', exchange_type='topic')
+        
+        # Bind queues to exchanges if needed
+        channel.queue_bind(
+            exchange='services_exchange',
+            queue='frontend_queue',
+            routing_key='frontend.*'
+        )
+        channel.queue_bind(
+            exchange='services_exchange',
+            queue='backend_queue',
+            routing_key='backend.*'
+        )
+        channel.queue_bind(
+            exchange='services_exchange',
+            queue='database_queue',
+            routing_key='database.*'
+        )
+        
+        setup_logger.info("Successfully set up RabbitMQ queues and exchanges")
+        print("Successfully set up RabbitMQ queues and exchanges")
+        connection.close()
+        return True
+    except Exception as e:
+        setup_logger.error(f"Error setting up RabbitMQ queues: {e}")
+        print(f"Error setting up RabbitMQ queues: {e}")
+        return False
 
 class MessageBroker:
     """
@@ -62,10 +126,7 @@ class MessageBroker:
 
     def setup_logging(self):
         """Set up logging configuration."""
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
+        # Use the existing logger with service_name suffix
         self.logger = logging.getLogger(f"messaging_broker.{self.service_name}")
 
     def connect(self):
@@ -492,5 +553,11 @@ def database_example():
     broker.close()
 
 if __name__ == "__main__":
-    # Example usage
-    backend_example()
+    import sys
+    
+    if len(sys.argv) > 1 and sys.argv[1] == 'setup':
+        # Run setup if requested
+        setup_rabbitmq_queues()
+    else:
+        # Example usage
+        backend_example()
