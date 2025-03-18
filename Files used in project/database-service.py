@@ -255,6 +255,8 @@ class DatabaseService:
     def run(self):
         """Start the database service"""
         logger.info("Starting database service...")
+        print("Database service is running and listening for messages...")
+        print("Press Ctrl+C to exit")
         
         # Start consuming messages from the database queue
         self.broker.consume_with_callback(self.process_message)
