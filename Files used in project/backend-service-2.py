@@ -153,6 +153,8 @@ class BackendService:
     def run(self):
         """Start the backend service"""
         logger.info("Starting backend service...")
+        print("Backend service is running and listening for messages...")
+        print("Press Ctrl+C to exit")
         
         # Start consuming messages from the backend queue
         self.broker.consume_with_callback(self.process_message)
