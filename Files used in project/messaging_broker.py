@@ -21,6 +21,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger('messaging_broker')
 
+# VM IP addresses configuration
+VM_IPS = {
+    "database": "10.147.20.166",
+    "frontend": "10.147.20.38",
+    "messaging": "10.147.20.12",
+    "backend": "10.147.20.113"
+}
+
 def setup_rabbitmq_queues():
     """
     Set up the initial RabbitMQ queues and exchanges
@@ -29,35 +37,43 @@ def setup_rabbitmq_queues():
     setup_logger = logging.getLogger("rabbitmq_setup")
     
     try:
-        # Connect to RabbitMQ
+        # Connect to RabbitMQ - Use messaging IP instead of localhost
+        credentials = pika.PlainCredentials(
+            username='guest',
+            password='guest'
+        )
         connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host='localhost', port=5672)
+            pika.ConnectionParameters(
+                host=VM_IPS['messaging'], 
+                port=5672,
+                credentials=credentials
+            )
         )
         channel = connection.channel()
         
-        # Declare queues
-        channel.queue_declare(queue='frontend_queue')
-        channel.queue_declare(queue='backend_queue')
-        channel.queue_declare(queue='database_queue')
+        # Declare queues with durable=True to match MessageBroker class
+        channel.queue_declare(queue='frontend_queue', durable=True)
+        channel.queue_declare(queue='backend_queue', durable=True)
+        channel.queue_declare(queue='database_queue', durable=True)
         
-        # Optionally set up exchanges if you need them
-        channel.exchange_declare(exchange='services_exchange', exchange_type='topic')
+        # Fixed exchange name to be consistent - using SERVICE_EXCHANGE throughout
+        channel.exchange_declare(exchange='service_exchange', exchange_type='topic', durable=True)
         
         # Bind queues to exchanges if needed
         channel.queue_bind(
-            exchange='services_exchange',
+            exchange='service_exchange',
             queue='frontend_queue',
-            routing_key='frontend.*'
+            routing_key='*.to.frontend'
         )
         channel.queue_bind(
-            exchange='services_exchange',
+            exchange='service_exchange',
             queue='backend_queue',
-            routing_key='backend.*'
+            routing_key='*.to.backend'
         )
         channel.queue_bind(
-            exchange='services_exchange',
+            exchange='service_exchange',
             queue='database_queue',
-            routing_key='database.*'
+            routing_key='*.to.database'
         )
         
         setup_logger.info("Successfully set up RabbitMQ queues and exchanges")
@@ -80,7 +96,7 @@ class MessageBroker:
     BACKEND_QUEUE = "backend_queue"
     DATABASE_QUEUE = "database_queue"
     
-    # Exchange names
+    # Exchange names - Fixed to be consistent with setup function
     SERVICE_EXCHANGE = "service_exchange"
     
     # Routing key patterns
@@ -93,7 +109,7 @@ class MessageBroker:
     
     def __init__(self, service_name):
         """
-        Initialize the message broker with local RabbitMQ credentials.
+        Initialize the message broker with proper RabbitMQ credentials.
         
         Args:
             service_name (str): The name of the service using this broker 
@@ -102,13 +118,13 @@ class MessageBroker:
         # Store the service identity
         self.service_name = service_name
         
-        # RabbitMQ connection details based on your files
+        # Use your existing RabbitMQ guest user
         self.credentials = pika.PlainCredentials(
             username='guest',
             password='guest'
         )
         self.parameters = pika.ConnectionParameters(
-            host='localhost',  # Changed from 10.147.20.12 to localhost
+            host=VM_IPS['messaging'],  # Using the messaging service IP
             port=5672,
             virtual_host='/',
             credentials=self.credentials,
